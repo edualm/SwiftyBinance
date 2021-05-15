@@ -2,7 +2,7 @@
 
 Binance API for usage from within Swift.
 
-For now, only two API methods are implemented, which are used in the example.
+For now, only a handful of API methods are implemented.
 
 ## Requirements
 
