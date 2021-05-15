@@ -2,35 +2,6 @@ import Foundation
 
 public enum BinanceResponse {
     
-    public struct MinerListResponse: Codable {
-        
-        public struct Data: Codable {
-            
-            public struct Worker: Codable {
-                
-                public enum Status: Int, Codable {
-                    case valid = 1
-                    case invalid = 2
-                    case noLongerValid = 3
-                }
-                
-                public let workerId: String
-                public let workerName: String
-                public let status: Status
-                public let hashRate: Double
-                public let dayHashRate: Double
-                public let rejectRate: Double
-                public let lastShareTime: Double
-            }
-            
-            public let workerDatas: [Worker]
-        }
-        
-        public let code: Int
-        public let msg: String
-        public let data: Data
-    }
-
     public struct EarningsListResponse: Codable {
         
         public struct Data: Codable {
@@ -69,5 +40,40 @@ public enum BinanceResponse {
         public let code: Int
         public let msg: String
         public let data: Data
+    }
+    
+    public struct MinerListResponse: Codable {
+        
+        public struct Data: Codable {
+            
+            public struct Worker: Codable {
+                
+                public enum Status: Int, Codable {
+                    case valid = 1
+                    case invalid = 2
+                    case noLongerValid = 3
+                }
+                
+                public let workerId: String
+                public let workerName: String
+                public let status: Status
+                public let hashRate: Double
+                public let dayHashRate: Double
+                public let rejectRate: Double
+                public let lastShareTime: Double
+            }
+            
+            public let workerDatas: [Worker]
+        }
+        
+        public let code: Int
+        public let msg: String
+        public let data: Data
+    }
+
+    public struct SymbolPriceTicker: Codable {
+        
+        public let symbol: String
+        public let price: Double
     }
 }
