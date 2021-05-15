@@ -22,6 +22,7 @@ public class BinanceConnection {
         }
         
         let payload: String
+        let timestamp: Bool
         let security: SecurityType
         
         func build() -> String {
@@ -31,15 +32,17 @@ public class BinanceConnection {
                 return payload
             }
             
-            built = "\(built)&timestamp=\(Int64(Date().timeIntervalSince1970 * 1000))"
+            if timestamp {
+                built = "\(built)&timestamp=\(Int64(Date().timeIntervalSince1970 * 1000))"
+            }
             
             guard let secret = security.secret else { return built }
             
             let key = SymmetricKey(data: secret.data(using: .utf8)!)
             
-            let signature = HMAC<SHA256>.authenticationCode(for: payload.data(using: .utf8)!, using: key)
+            let signature = HMAC<SHA256>.authenticationCode(for: built.data(using: .utf8)!, using: key)
             
-            return Data(signature).map { String(format: "%02hhx", $0) }.joined()
+            return "\(built)&signature=\(Data(signature).map { String(format: "%02hhx", $0) }.joined())"
         }
     }
     
@@ -62,8 +65,8 @@ public class BinanceConnection {
         self.secretKey = secretKey
     }
     
-    private func performCall<T: Decodable>(withPath path: String, queryString: String, securityType: PayloadBuilder.SecurityType, completionHandler: @escaping (Result<T, BinanceConnection.BinanceError>) -> ()) {
-        let payload = PayloadBuilder(payload: queryString, security: securityType).build()
+    private func performCall<T: Decodable>(withPath path: String, queryString: String, timestamp: Bool, securityType: PayloadBuilder.SecurityType, completionHandler: @escaping (Result<T, BinanceConnection.BinanceError>) -> ()) {
+        let payload = PayloadBuilder(payload: queryString, timestamp: timestamp, security: securityType).build()
         
         let url = URL(string: "\(BinanceConnection.Endpoint)\(path)?\(payload)")!
         
@@ -92,10 +95,10 @@ public class BinanceConnection {
             
             guard let parsedResponse = try? JSONDecoder().decode(T.self, from: data) else {
                 completionHandler(.failure(.invalidResponse))
-                
+
                 return
             }
-            
+
             completionHandler(.success(parsedResponse))
         }
         
@@ -103,7 +106,7 @@ public class BinanceConnection {
     }
     
     public func getSymbolPriceTicker(symbol: String, completionHandler: @escaping (Result<SymbolPriceTicker, BinanceConnection.BinanceError>) -> ()) {
-        performCall(withPath: "/api/v3/ticker/price", queryString: "symbol=\(symbol)", securityType: .marketData) { (result: Result<BinanceResponse.SymbolPriceTicker, BinanceConnection.BinanceError>) in
+        performCall(withPath: "/api/v3/ticker/price", queryString: "symbol=\(symbol)", timestamp: false, securityType: .marketData) { (result: Result<BinanceResponse.SymbolPriceTicker, BinanceConnection.BinanceError>) in
             switch result {
             case .success(let response):
                 completionHandler(.success(response))
@@ -115,7 +118,7 @@ public class BinanceConnection {
     }
     
     public func getMinerList(completionHandler: @escaping (Result<[Worker], BinanceConnection.BinanceError>) -> ()) {
-        performCall(withPath: "/sapi/v1/mining/worker/list", queryString: "algo=ethash&userName=trocopasso", securityType: .userData(secret: secretKey)) { (result: Result<BinanceResponse.MinerListResponse, BinanceConnection.BinanceError>) in
+        performCall(withPath: "/sapi/v1/mining/worker/list", queryString: "algo=ethash&userName=trocopasso", timestamp: true, securityType: .userData(secret: secretKey)) { (result: Result<BinanceResponse.MinerListResponse, BinanceConnection.BinanceError>) in
             switch result {
             case .success(let response):
                 completionHandler(.success(response.data.workerDatas))
@@ -127,7 +130,7 @@ public class BinanceConnection {
     }
     
     public func getEarnings(completionHandler: @escaping (Result<[AccountProfits], BinanceConnection.BinanceError>) -> ()) {
-        performCall(withPath: "/sapi/v1/mining/payment/list", queryString: "algo=ethash&userName=trocopasso", securityType: .userData(secret: secretKey)) { (result: Result<BinanceResponse.EarningsListResponse, BinanceConnection.BinanceError>) in
+        performCall(withPath: "/sapi/v1/mining/payment/list", queryString: "algo=ethash&userName=trocopasso", timestamp: true, securityType: .userData(secret: secretKey)) { (result: Result<BinanceResponse.EarningsListResponse, BinanceConnection.BinanceError>) in
             switch result {
             case .success(let response):
                 completionHandler(.success(response.data.accountProfits))

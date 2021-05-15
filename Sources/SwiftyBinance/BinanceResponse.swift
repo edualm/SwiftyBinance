@@ -2,6 +2,10 @@ import Foundation
 
 public enum BinanceResponse {
     
+    enum APIError: Error {
+        case decodingError
+    }
+    
     public struct EarningsListResponse: Codable {
         
         public struct Data: Codable {
@@ -75,5 +79,31 @@ public enum BinanceResponse {
         
         public let symbol: String
         public let price: Double
+        
+        enum CodingKeys: String, CodingKey {
+            case symbol
+            case price
+        }
+        
+        init?(json: [String: Any]) {
+            guard let symbol = json["symbol"] as? String else { return nil }
+            guard let priceAsString = json["price"] as? String else { return nil }
+            guard let price = Double(priceAsString) else { return nil }
+            
+            self.symbol = symbol
+            self.price = price
+        }
+        
+        public init(from decoder: Decoder) throws {
+            let values = try decoder.container(keyedBy: CodingKeys.self)
+            let priceAsString = try values.decode(String.self, forKey: .price)
+            
+            guard let price = Double(priceAsString) else {
+                throw APIError.decodingError
+            }
+            
+            self.symbol = try values.decode(String.self, forKey: .symbol)
+            self.price = price
+        }
     }
 }
