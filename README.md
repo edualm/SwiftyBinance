@@ -4,9 +4,19 @@ Binance API for usage from within Swift.
 
 For now, only two API methods are implemented, which are used in the example.
 
+## Requirements
+
+iOS 13+ / macOS 10.15+ / watchOS 5+ / tvOS 13+
+
+## Installation
+
+This package can be imported using Swift Package Manager.
+
 ## Example Usage
 
 ```
+import SwiftyBinance
+
 let apiKey = "<Your API Key>"
 let secretKey = "<Your Secret Key>"
 
